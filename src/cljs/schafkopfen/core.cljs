@@ -59,12 +59,12 @@
 
 (defn main []
   (om/root
-    (fn [app owner]
-      (reify
-        om/IRender
-        (render [_]
-                (dom/div nil
-                         (dom/h1 nil (:header app))
-                         (om/build players-view app)))))
-    app-state
-    {:target (. js/document (getElementById "app"))}))
+   (fn [app owner]
+     (reify
+       om/IRender
+       (render [_]
+         (dom/div nil
+                  (dom/h1 nil (:header app))
+                  (om/build players-view app)))))
+   app-state
+   {:target (. js/document (getElementById "app"))}))
