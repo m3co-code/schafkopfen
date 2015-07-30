@@ -29,7 +29,8 @@
   (reify
     om/IInitState
     (init-state [_]
-      {:delete (chan)})
+      {:delete (chan)
+       :warning nil})
     om/IWillMount
     (will-mount [_]
       (let [delete (om/get-state owner :delete)]
@@ -39,18 +40,24 @@
                           (fn [xs] (vec (remove #(= player %) xs))))
             (recur)))))
     om/IRenderState
-    (render-state [this {:keys [delete]}]
-      (let [on-name-submit (fn [e]
-                             (let [input (om/get-node owner "new-player-name")
-                                   name (-> input .-value)]
-                               (when name
-                                 (om/transact! data :players #(conj % {:name name}))
-                                 (set! (.-value input) "")))
-                             false)]
+    (render-state [this {:keys [delete warning]}]
+      (let [on-name-submit
+            (fn [e]
+              (let [input (om/get-node owner "new-player-name")
+                    name (-> input .-value)]
+                (cond
+                  (or (not name) (= "" name)) (om/set-state! owner :warning "Invalid name!")
+                  (some #(= name (:name %)) (:players data)) (om/set-state! owner :warning "Duplicate user!")
+                  :default (do
+                             (om/transact! data :players #(conj % {:name name}))
+                             (set! (.-value input) "")
+                             (om/set-state! owner :warning nil))))
+              false)]
         (dom/div nil
                  (dom/h2 nil "Players")
                  (apply dom/ul nil
                         (om/build-all player-view (:players data) {:init-state {:delete delete}}))
+                 (when-not (nil? warning) (dom/div #js {:className "alert alert-danger" :role "alert"} warning))
                  (dom/form #js {:onSubmit on-name-submit}
                            (dom/input #js {:type :text :placeholder "Name" :ref "new-player-name"})
                            (dom/button
