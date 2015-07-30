@@ -1,4 +1,4 @@
 .lein-*
 .nrepl-port
 target
-resources
+resources/public/js
